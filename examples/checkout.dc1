@@ -1,0 +1,23 @@
+; declare registers
+#regs ABC, D
+
+; run program for six clock cycles
+#cycles 6
+
+; define output
+#out bin, ABC, D
+
+; toggle D to output every tick
+set D !D
+res D D
+
+; if B then set A.
+set A B
+; if not B then reset A.
+res A !B
+
+set B C
+res B !C
+
+set C !A
+res C A

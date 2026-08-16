@@ -1,11 +1,22 @@
-#regs DCBA, LKJI, Y, Z, QPO
-#pre DCBA=15, LKJI=3
-#int DCBA, Y
+; This program adds a number 4-bit number to another every four cycles.
 
+; DCBA: first number
+; LKJI: second number
+; Y: output update register
+; Z: carry bit
+; PO: program counter
+
+; add second number to first number 16/4=4 times
+#cycles 16
+#regs DCBA, LKJI, Y, Z, PO
+#pre DCBA=3, LKJI=3
+#out dec, DCBA, Y
+
+; output result every four cycles
 set Y OP!Y
 res Y OPY
 
-
+; add first bits if PO = 0
 set A !P!O !A!IZ
 set A !P!O !AI!Z
 set A !P!O A!I!Z
@@ -18,7 +29,7 @@ set Z !P!O IZ
 pres A !P!O
 
 
-
+; add second bits if PO = 1
 set B !PO !B!JZ
 set B !PO !BJ!Z
 set B !PO B!J!Z
@@ -31,7 +42,7 @@ set Z !PO JZ
 pres B !PO
 
 
-
+; add third bits if PO = 2
 set C P!O !C!KZ
 set C P!O !CK!Z
 set C P!O C!K!Z
@@ -44,9 +55,7 @@ set Z P!O KZ
 pres C P!O
 
 
-
-
-
+; add fourth bits if PO = 3
 set D PO !D!LZ
 set D PO !DL!Z
 set D PO D!L!Z
@@ -59,37 +68,11 @@ set Z PO LZ
 pres D PO
 
 
-
-
+; increment PO
 set O !O
 pres O
 set P O!P
 res P OP
-set Q OP!Q
-res Q OPQ
 
 
 pres Z
-
-
-
-
-
-
-
-
-
-
-;;
-set A A!I
-set A !AI
-pres A
-
-set B !J!BAI
-set B !JB!I
-set B !JB!A
-set B J!I!B
-set B JIBA
-set B JI!B!A
-pres B
-;;

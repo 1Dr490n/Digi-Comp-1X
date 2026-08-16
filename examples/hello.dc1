@@ -1,0 +1,30 @@
+#cycles 5
+#regs ABC, D..J
+; output bits D through J every time A changes (every tick) as one ascii character.
+#out ascii, D..J, A
+
+; use ABC as a program counter, increment every tick
+set A !A
+res A A
+set B A!B
+res B AB
+set C AB!C
+res C ABC
+
+; always set D (bit 7) for letters in ASCII
+set D
+; set E (bit 6) after one tick for lowercase letters
+set E A
+
+; cleverly manipulate all other bits dependant on the program counter for the right output string "Hello"
+set G !A
+set G B
+res G A!B
+
+set H A
+
+set I C
+
+set J A!B
+set J C
+res J B

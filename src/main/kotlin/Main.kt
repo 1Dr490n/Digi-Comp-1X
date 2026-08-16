@@ -2,8 +2,8 @@ package org.example
 
 import java.io.File
 
-fun main() {
-	val lines = File("fibonacci.dc1").readLines().map { it.trim() }.filter { it.isNotEmpty() && (it[0] != ';' || it == ";;") }
+fun main(args: Array<String>) {
+	val lines = File(args[0]).readLines().map { it.trim() }.filter { it.isNotEmpty() && (it[0] != ';' || it == ";;") }
 
 	val registers = mutableListOf<Char>()
 
@@ -47,12 +47,13 @@ fun main() {
 				}
 			}
 
-			"ascii" -> {
-				outputMethods += OutputMethod.Ascii(parseRegisters(args[0]).map(::getReg), getReg(args[1].single()))
-			}
-
-			"int" -> {
-				outputMethods += OutputMethod.Integer(parseRegisters(args[0]).map(::getReg), getReg(args[1].single()))
+			"out" -> {
+				outputMethods += OutputMethod.Number(when(args[0]) {
+					"dec" -> OutputMethod.Number.Format.Dec
+					"bin" -> OutputMethod.Number.Format.Bin
+					"ascii" -> OutputMethod.Number.Format.Ascii
+					else -> throw Exception("Unknown output format ${args[0]}")
+				}, parseRegisters(args[1]).map(::getReg).also { if(it.isEmpty()) throw Exception("Cannot output 0 bits") }, getReg(args[2].single()))
 			}
 
 			"pre" -> {
@@ -108,19 +109,16 @@ fun main() {
 				previousControls[i] = newControl
 
 				when(method) {
-					is OutputMethod.Ascii -> {
+					is OutputMethod.Number -> {
 						val sb = StringBuilder()
 						method.bits.forEach {
 							sb.append(if (currentState[it]) '1' else '0')
 						}
-						print(sb.toString().toInt(2).toChar())
-					}
-					is OutputMethod.Integer -> {
-						val sb = StringBuilder()
-						method.bits.forEach {
-							sb.append(if (currentState[it]) '1' else '0')
+						when(method.format) {
+							OutputMethod.Number.Format.Ascii -> print(sb.toString().toInt(2).toChar())
+							OutputMethod.Number.Format.Dec -> println(sb.toString().toInt(2))
+							OutputMethod.Number.Format.Bin -> println(sb.toString().toInt(2).toString(2).padStart(method.bits.size, '0'))
 						}
-						println(sb.toString().toInt(2))
 					}
 				}
 			}
@@ -139,8 +137,11 @@ enum class Mode(val setTo: Boolean) {
 }
 
 sealed class OutputMethod(val control: Int) {
-	class Ascii(val bits: List<Int>, control: Int) : OutputMethod(control)
-	class Integer(val bits: List<Int>, control: Int) : OutputMethod(control)
+	class Number(val format: Format, val bits: List<Int>, control: Int) : OutputMethod(control) {
+		enum class Format {
+			Ascii, Dec, Bin
+		}
+	}
 }
 
 fun parseCondition(condition: String, registers: List<Char>): Condition {

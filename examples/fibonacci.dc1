@@ -1,7 +1,7 @@
 #cycles 60
 #regs FEDCBA, nmLKJI, VUTSRQ, Y, Z, MPO
 #pre FEDCBA=0, nmLKJI=1
-#int FEDCBA, Y
+#out dec, FEDCBA, Y
 
 
 set Y M!PO!Y
