@@ -78,3 +78,8 @@ If B is true, A is set through the first line. As A is already set within this c
 But because we use the `pres` (pull reset) operation there, no error is thrown and the operation is instead simply ignored.
 If however B was false, A would be reset because the first line doesn't do anything. So these lines translate to "Set A to B".
 
+# Future plans
+- A proper UI/debugger
+- Shortcuts for common operations
+- A pixel plotter
+- User input
