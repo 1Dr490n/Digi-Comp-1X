@@ -1,0 +1,95 @@
+#regs DCBA, LKJI, Y, Z, QPO
+#pre DCBA=15, LKJI=3
+#int DCBA, Y
+
+set Y OP!Y
+res Y OPY
+
+
+set A !P!O !A!IZ
+set A !P!O !AI!Z
+set A !P!O A!I!Z
+set A !P!O AIZ
+
+set Z !P!O AI
+set Z !P!O AZ
+set Z !P!O IZ
+
+pres A !P!O
+
+
+
+set B !PO !B!JZ
+set B !PO !BJ!Z
+set B !PO B!J!Z
+set B !PO BJZ
+
+set Z !PO BJ
+set Z !PO BZ
+set Z !PO JZ
+
+pres B !PO
+
+
+
+set C P!O !C!KZ
+set C P!O !CK!Z
+set C P!O C!K!Z
+set C P!O CKZ
+
+set Z P!O CK
+set Z P!O CZ
+set Z P!O KZ
+
+pres C P!O
+
+
+
+
+
+set D PO !D!LZ
+set D PO !DL!Z
+set D PO D!L!Z
+set D PO DLZ
+
+set Z PO DL
+set Z PO DZ
+set Z PO LZ
+
+pres D PO
+
+
+
+
+set O !O
+pres O
+set P O!P
+res P OP
+set Q OP!Q
+res Q OPQ
+
+
+pres Z
+
+
+
+
+
+
+
+
+
+
+;;
+set A A!I
+set A !AI
+pres A
+
+set B !J!BAI
+set B !JB!I
+set B !JB!A
+set B J!I!B
+set B JIBA
+set B JI!B!A
+pres B
+;;
