@@ -1,4 +1,4 @@
-package org.example
+package de.drgn.digicomp1x
 
 import java.io.File
 
@@ -48,12 +48,17 @@ fun main(args: Array<String>) {
 			}
 
 			"out" -> {
-				outputMethods += OutputMethod.Number(when(args[0]) {
-					"dec" -> OutputMethod.Number.Format.Dec
-					"bin" -> OutputMethod.Number.Format.Bin
-					"ascii" -> OutputMethod.Number.Format.Ascii
-					else -> throw Exception("Unknown output format ${args[0]}")
-				}, parseRegisters(args[1]).map(::getReg).also { if(it.isEmpty()) throw Exception("Cannot output 0 bits") }, getReg(args[2].single()))
+				outputMethods += OutputMethod.Number(
+					when (args[0]) {
+						"dec" -> OutputMethod.Number.Format.Dec
+						"bin" -> OutputMethod.Number.Format.Bin
+						"ascii" -> OutputMethod.Number.Format.Ascii
+						else -> throw Exception("Unknown output format ${args[0]}")
+					},
+					parseRegisters(args[1]).map(::getReg)
+						.also { if (it.isEmpty()) throw Exception("Cannot output 0 bits") },
+					getReg(args[2].single())
+				)
 			}
 
 			"pre" -> {
