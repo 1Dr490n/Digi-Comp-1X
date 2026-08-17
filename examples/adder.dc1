@@ -9,14 +9,23 @@
 ; add second number to first number 16/4=4 times
 #cycles 16
 #regs DCBA, LKJI, Y, Z, PO
-#pre DCBA=3, LKJI=3
+#pre DCBA=3, LKJI=4
 #out dec, DCBA, Y
+
+; import the standard macro library
+#macros test.py
 
 ; output result every four cycles
 set Y OP!Y
 res Y OPY
 
+
 ; add first bits if PO = 0
+; use @add macro to add A to I if !P!O, using Z as a carry bit.
+@add(A, I, Z, !P!O)
+
+;;
+	this is a multiline comment. The macro above expands to this:
 set A !P!O !A!IZ
 set A !P!O !AI!Z
 set A !P!O A!I!Z
@@ -27,46 +36,17 @@ set Z !P!O AZ
 set Z !P!O IZ
 
 pres A !P!O
-
+pres Z
+;;
 
 ; add second bits if PO = 1
-set B !PO !B!JZ
-set B !PO !BJ!Z
-set B !PO B!J!Z
-set B !PO BJZ
-
-set Z !PO BJ
-set Z !PO BZ
-set Z !PO JZ
-
-pres B !PO
-
+@add(B, J, Z, !PO)
 
 ; add third bits if PO = 2
-set C P!O !C!KZ
-set C P!O !CK!Z
-set C P!O C!K!Z
-set C P!O CKZ
-
-set Z P!O CK
-set Z P!O CZ
-set Z P!O KZ
-
-pres C P!O
-
+@add(C, K, Z, P!O)
 
 ; add fourth bits if PO = 3
-set D PO !D!LZ
-set D PO !DL!Z
-set D PO D!L!Z
-set D PO DLZ
-
-set Z PO DL
-set Z PO DZ
-set Z PO LZ
-
-pres D PO
-
+@add(D, L, Z, PO)
 
 ; increment PO
 set O !O
@@ -74,5 +54,3 @@ pres O
 set P O!P
 res P OP
 
-
-pres Z

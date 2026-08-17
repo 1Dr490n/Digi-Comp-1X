@@ -1,6 +1,10 @@
 package de.drgn.digicomp1x
 
+import org.python.core.PyFunction
+import org.python.core.PyList
+import org.python.core.PyString
 import java.io.File
+import org.python.util.PythonInterpreter
 
 fun main(args: Array<String>) {
 	val lines = File(args[0]).readLines().map { it.trim() }.filter { it.isNotEmpty() && (it[0] != ';' || it == ";;") }
@@ -13,16 +17,18 @@ fun main(args: Array<String>) {
 
 	var cycles = 0
 
+	val pythonInterpreter = PythonInterpreter()
+
 	fun getReg(char: Char) = registers.indexOf(char).also { if (it == -1) throw Exception("Undeclared register $char") }
 
 	var inComment = false
 
 	for (line in lines) {
-		if(line == ";;") {
+		if (line == ";;") {
 			inComment = !inComment
 			continue
 		}
-		if(inComment) continue
+		if (inComment) continue
 		if (line[0] != '#') break
 		val args = line.substringAfter(' ').split(',').map { it.trim() }
 
@@ -64,7 +70,8 @@ fun main(args: Array<String>) {
 			"pre" -> {
 				args.forEach {
 					val registers = parseRegisters(it.substringBefore('='))
-					val value = it.substringAfter('=').toInt().toString(2).takeLast(registers.size).padStart(registers.size, '0')
+					val value = it.substringAfter('=').toInt().toString(2).takeLast(registers.size)
+						.padStart(registers.size, '0')
 					registers.forEachIndexed { i, r ->
 						initialState[r] = value.getOrNull(i) == '1'
 					}
@@ -75,19 +82,40 @@ fun main(args: Array<String>) {
 				cycles = args.single().toInt()
 			}
 
+			"macros" -> {
+				args.forEach {
+					pythonInterpreter.exec(File(it).readText())
+				}
+			}
+
 			else -> throw Exception("Invalid directive $dir")
 		}
 	}
-	val parts = lines.dropWhile { it.startsWith('#') }.mapNotNull {
-		if(it == ";;") {
+	val parts = lines.dropWhile { it.startsWith('#') }.flatMap {
+		val macroGroups = Regex("""@(?<name>[a-zA-Z_][a-zA-Z_0-9]*)\((?<args>.*)\)""").matchEntire(it)?.groups
+			?: return@flatMap listOf(it)
+		val function = pythonInterpreter.get(macroGroups["name"]!!.value, PyFunction::class.java)
+			?: throw Exception("Unknown macro '${macroGroups["name"]!!.value}'")
+		val result = function.__call__(macroGroups["args"]!!.value.split(',').map {
+			PyString(it.trim())
+		}.toTypedArray())
+		when (result) {
+			is PyString -> listOf(result.string)
+			is PyList -> result.map { it.toString() }
+			else -> throw Exception("Unsupported function return type $result")
+		}
+	}.mapNotNull {
+		if (it == ";;") {
 			inComment = !inComment
 			return@mapNotNull null
 		}
-		if(inComment) return@mapNotNull null
+		if (inComment) return@mapNotNull null
 		if (it.isBlank()) return@mapNotNull null
 
 		val groups =
-			Regex("""(?<mode>res|set|pres|pset)\s+(?<register>[A-Za-z0-9])\s*(?:(?::|\s)\s*(?<condition>.*))?""").matchEntire(it)?.groups
+			Regex("""(?<mode>res|set|pres|pset)\s+(?<register>[A-Za-z0-9])\s*(?:(?::|\s)\s*(?<condition>.*))?""").matchEntire(
+				it
+			)?.groups
 				?: throw Exception("Cannot parse line $it")
 
 		Line(
@@ -95,7 +123,7 @@ fun main(args: Array<String>) {
 			getReg(groups["register"]!!.value.single()),
 			parseCondition(groups["condition"]?.value ?: "", registers)
 		)
-	}
+	}.toSet()
 
 	val program = Program(
 		parts,
@@ -113,16 +141,18 @@ fun main(args: Array<String>) {
 			if (newControl != previousControls[i]) {
 				previousControls[i] = newControl
 
-				when(method) {
+				when (method) {
 					is OutputMethod.Number -> {
 						val sb = StringBuilder()
 						method.bits.forEach {
 							sb.append(if (currentState[it]) '1' else '0')
 						}
-						when(method.format) {
+						when (method.format) {
 							OutputMethod.Number.Format.Ascii -> print(sb.toString().toInt(2).toChar())
 							OutputMethod.Number.Format.Dec -> println(sb.toString().toInt(2))
-							OutputMethod.Number.Format.Bin -> println(sb.toString().toInt(2).toString(2).padStart(method.bits.size, '0'))
+							OutputMethod.Number.Format.Bin -> println(
+								sb.toString().toInt(2).toString(2).padStart(method.bits.size, '0')
+							)
 						}
 					}
 				}
@@ -136,9 +166,9 @@ typealias Condition = Map<Int, Boolean>
 data class Line(val mode: Mode, val register: Int, val condition: Condition)
 typealias State = List<Boolean>
 
-data class Program(val lines: List<Line>, val registers: Int, val outputMethods: Set<OutputMethod>)
-enum class Mode(val setTo: Boolean) {
-	Set(true), Res(false), PSet(true), PRes(false)
+data class Program(val lines: Set<Line>, val registers: Int, val outputMethods: Set<OutputMethod>)
+enum class Mode(val setTo: Boolean, val isPull: Boolean = false) {
+	Set(true), Res(false), PSet(true, true), PRes(false, true)
 }
 
 sealed class OutputMethod(val control: Int) {
@@ -154,8 +184,8 @@ fun parseCondition(condition: String, registers: List<Char>): Condition {
 	val result = mutableMapOf<Int, Boolean>()
 	var condition = condition.replace(Regex("\\s"), "")
 	fun getReg(char: Char) = registers.indexOf(char).also { if (it == -1) throw Exception("Undeclared register $char") }
-	while(condition.isNotEmpty()) {
-		if(condition[0] == '!') {
+	while (condition.isNotEmpty()) {
+		if (condition[0] == '!') {
 			result[getReg(condition[1])] = false
 			condition = condition.drop(2)
 		} else {
@@ -167,13 +197,25 @@ fun parseCondition(condition: String, registers: List<Char>): Condition {
 }
 
 fun clock(program: Program, state: State): State {
-	val newState = mutableMapOf<Int, Pair<Int, Boolean>>()
+	val newState = mutableMapOf<Int, Triple<Int, Boolean, Boolean>>()
 	program.lines.forEachIndexed { i, it ->
 		if (it.condition.all { (register, value) -> state[register] == value }) {
-			if (newState[it.register] != null && newState[it.register]?.second != it.mode.setTo) {
-				if (it.mode < Mode.PSet)
-					throw Exception("Attempting to set in $i after setting in ${newState[it.register]?.first}")
-			} else newState[it.register] = i to it.mode.setTo
+			val existing = newState[it.register]
+
+			val action = run {
+				if (existing == null) true
+				else if (existing.second != it.mode.setTo) {
+					if (existing.third == it.mode.isPull) false
+					else if (it.mode.isPull) null
+					else true
+				} else null
+			}
+
+			if (action == true) {
+				newState[it.register] = Triple(i, it.mode.setTo, it.mode.isPull)
+			} else if (action == false) {
+				throw Exception("Attempting to ${if (it.mode.setTo) "set" else "res"} in $i after ${if (existing!!.second) "setting" else "resetting"} in ${newState[it.register]?.first}")
+			}
 		}
 	}
 	return state.mapIndexed { i, b ->

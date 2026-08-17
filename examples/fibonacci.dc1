@@ -2,94 +2,17 @@
 #regs FEDCBA, nmLKJI, VUTSRQ, Y, Z, MPO
 #pre FEDCBA=0, nmLKJI=1
 #out dec, FEDCBA, Y
-
+#macros test.py
 
 set Y M!PO!Y
 res Y M!POY
 
-
-
-set A !M!P!O !A!IZ
-set A !M!P!O !AI!Z
-set A !M!P!O A!I!Z
-set A !M!P!O AIZ
-
-set Z !M!P!O AI
-set Z !M!P!O AZ
-set Z !M!P!O IZ
-
-pres A !M!P!O
-
-
-
-set B !M!PO !B!JZ
-set B !M!PO !BJ!Z
-set B !M!PO B!J!Z
-set B !M!PO BJZ
-
-set Z !M!PO BJ
-set Z !M!PO BZ
-set Z !M!PO JZ
-
-pres B !M!PO
-
-
-
-set C !MP!O !C!KZ
-set C !MP!O !CK!Z
-set C !MP!O C!K!Z
-set C !MP!O CKZ
-
-set Z !MP!O CK
-set Z !MP!O CZ
-set Z !MP!O KZ
-
-pres C !MP!O
-
-
-
-
-
-set D !MPO !D!LZ
-set D !MPO !DL!Z
-set D !MPO D!L!Z
-set D !MPO DLZ
-
-set Z !MPO DL
-set Z !MPO DZ
-set Z !MPO LZ
-
-pres D !MPO
-
-
-
-
-set E M!P!O !E!mZ
-set E M!P!O !Em!Z
-set E M!P!O E!m!Z
-set E M!P!O EmZ
-
-set Z M!P!O Em
-set Z M!P!O EZ
-set Z M!P!O mZ
-
-pres E M!P!O
-
-
-
-set F M!PO !F!nZ
-set F M!PO !Fn!Z
-set F M!PO F!n!Z
-set F M!PO FnZ
-
-set Z M!PO Fn
-set Z M!PO FZ
-set Z M!PO nZ
-
-pres F M!PO
-
-
-
+@add(A, I, Z, !M!P!O)
+@add(B, J, Z, !M!PO)
+@add(C, K, Z, !MP!O)
+@add(D, L, Z, !MPO)
+@add(E, m, Z, M!P!O)
+@add(F, n, Z, M!PO)
 
 set O !O
 pres O
@@ -98,33 +21,8 @@ res P OP
 set M OP
 res M MO
 
+@set(VUTSRQ, FEDCBA, !M!P!O)
+@pres(VUTSRQ, !M!P!O)
 
-
-pres Z
-
-
-set V !M!P!OF
-res V !M!P!O!F
-set U !M!P!OE
-res U !M!P!O!E
-set T !M!P!OD
-res T !M!P!O!D
-set S !M!P!OC
-res S !M!P!O!C
-set R !M!P!OB
-res R !M!P!O!B
-set Q !M!P!OA
-res Q !M!P!O!A
-
-set n M!POV
-res n M!PO!V
-set m M!POU
-res m M!PO!U
-set L M!POT
-res L M!PO!T
-set K M!POS
-res K M!PO!S
-set J M!POR
-res J M!PO!R
-set I M!POQ
-res I M!PO!Q
+@set(nmLKJI, VUTSRQ, M!PO)
+@pres(nmLKJI, M!PO)

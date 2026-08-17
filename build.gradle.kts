@@ -17,6 +17,9 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
+
+    // Source: https://mvnrepository.com/artifact/org.python/jython-standalone
+    implementation("org.python:jython-standalone:2.7.4")
 }
 
 tasks.test {

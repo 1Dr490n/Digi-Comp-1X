@@ -44,6 +44,7 @@ All directives must start with a `#` and be at the beginning of the program. The
 | `#regs`   | `#regs ABC, M..P, Z` | Declare registers used in the program.                                                   |
 | `#pre`    | `#pre A=1, M..P=10`  | Give registers initial values.                                                           |
 | `#out`    | `#out dec, ABCD, Z`  | Output a number (ABCD) every time a register (Z) changes<br/>in a specific format (dec). |
+| `#macros` | `#macros macros.py`  | Import macros from a Python file.                                                        |
 
 Some directives read a list of registers. These can either be written out (ABCD) or as a range (A..D).
 In the `#pre` and `#out` directives you can use one list of registers for a single number.
@@ -78,8 +79,35 @@ If B is true, A is set through the first line. As A is already set within this c
 But because we use the `pres` (pull reset) operation there, no error is thrown and the operation is instead simply ignored.
 If however B was false, A would be reset because the first line doesn't do anything. So these lines translate to "Set A to B".
 
+## Macros
+Normally there are a lot of repetitions in Digi-Comp 1X code. That's where macros come in handy.
+
+Macros are Python2 functions that write code and can be called in the initialization state.
+
+```python
+# test-macros.py
+
+def setAll(registers, condition):
+    return ['set {} {}'.format(x, condition) for x in registers]    
+```
+
+```
+#macros test-macros.py
+#registers ABC, D
+
+@setAll(ABC, !D)
+```
+In the initialization process this last line is replaced by:
+```
+set A !D
+set B !D
+set C !D
+```
+Macros can return either a single line or a list of lines. They may also raise exceptions.
+
+There are a few standard macros in `macros.py` but you can write your own whenever you need to.
+
 # Future plans
 - A proper UI/debugger
-- Shortcuts for common operations
 - A pixel plotter
 - User input
